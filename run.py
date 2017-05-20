@@ -95,7 +95,8 @@ async def on_command_error(error, ctx):
         formatter = commands.formatter.HelpFormatter()
         await bot.send_message(ctx.message.channel, "{} You are missing required arguments.\n{}".format(ctx.message.author.mention, formatter.format_help_for(ctx, ctx.command)[0]))
     else:
-        await bot.send_message(ctx.message.channel, "An error occured while processing the `{}` command.".format(ctx.command.name))
+        if ctx.command:
+            await bot.send_message(ctx.message.channel, "An error occured while processing the `{}` command.".format(ctx.command.name))
         print('Ignoring exception in command {}'.format(ctx.command), file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
@@ -108,21 +109,27 @@ bot.wait_until_all_ready = wait_until_all_ready
 
 @bot.event
 async def on_ready():
-    if bot.all_ready:
-        return
     # this bot should only ever be in one server anyway
     for server in bot.servers:
-        print("{} has started! {} has {:,} members!".format(bot.user.name, server.name, server.member_count))
         bot.server = server
+        if bot.all_ready:
+            break
+
+        print("{} has started! {} has {:,} members!".format(bot.user.name, server.name, server.member_count))
 
         # channels
         bot.welcome_channel = discord.utils.get(server.channels, name="welcome-and-rules")
         bot.announcements_channel = discord.utils.get(server.channels, name="announcements")
         bot.helpers_channel = discord.utils.get(server.channels, name="helpers")
+        bot.offtopic_channel = discord.utils.get(server.channels, name="off-topic")
+        bot.voiceandmusic_channel = discord.utils.get(server.channels, name="voice-and-music")
+        bot.elsewhere_channel = discord.utils.get(server.channels, name="elsewhere")
         bot.mods_channel = discord.utils.get(server.channels, name="mods")
         bot.modlogs_channel = discord.utils.get(server.channels, name="mod-logs")
         bot.serverlogs_channel = discord.utils.get(server.channels, name="server-logs")
         bot.messagelogs_channel = discord.utils.get(server.channels, name="message-logs")
+        bot.watchlogs_channel = discord.utils.get(server.channels, name="watch-logs")
+        bot.botcmds_channel = discord.utils.get(server.channels, name="bot-cmds")
 
         # roles
         bot.staff_role = discord.utils.get(server.roles, name="Staff")
@@ -141,6 +148,7 @@ async def on_ready():
         bot.nohelp_role = discord.utils.get(server.roles, name="No-Help")
         bot.noembed_role = discord.utils.get(server.roles, name="No-Embed")
         bot.elsewhere_role = discord.utils.get(server.roles, name="#elsewhere")
+        bot.eventchat_role = discord.utils.get(server.roles, name="#eventchat")
         bot.everyone_role = server.default_role
 
         bot.staff_ranks = {
@@ -203,7 +211,7 @@ addons = [
     'addons.assistance',
     'addons.blah',
     #'addons.bf',
-    'addons.ctrerr',
+    'addons.err',
     'addons.events',
     'addons.extras',
     'addons.friendcode',
@@ -218,7 +226,6 @@ addons = [
     'addons.mod_warn',
     'addons.mod_watch',
     'addons.mod',
-    'addons.ninerr',
     'addons.rules',
     'addons.xkcdparse',
 ]
